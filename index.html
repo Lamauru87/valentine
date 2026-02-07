@@ -14,15 +14,24 @@
             justify-content: center;
             align-items: center;
             overflow: hidden;
-        }
-
-        .container {
             text-align: center;
         }
 
-        h1 {
+        .container {
             color: white;
+            position: relative;
+        }
+
+        h1 {
             margin-bottom: 30px;
+        }
+
+        /* Zone fixe pour éviter que le bouton Oui bouge le texte */
+        .yes-wrapper {
+            height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         button {
@@ -31,30 +40,44 @@
             border: none;
             border-radius: 12px;
             cursor: pointer;
-            transition: transform 0.2s ease;
-            position: relative;
         }
 
         #yesBtn {
             background-color: #4CAF50;
             color: white;
+            transition: transform 0.3s ease;
         }
 
         #noBtn {
             background-color: #f44336;
             color: white;
             position: absolute;
+            transition: left 0.25s ease-out, top 0.25s ease-out, transform 0.2s ease;
         }
 
         #message {
             margin-top: 25px;
             font-size: 22px;
-            color: white;
+            min-height: 40px;
         }
 
         iframe {
             margin-top: 20px;
             border-radius: 15px;
+        }
+
+        /* Tremblement */
+        @keyframes shake {
+            0% { transform: translate(0); }
+            20% { transform: translate(-5px, 5px); }
+            40% { transform: translate(5px, -5px); }
+            60% { transform: translate(-5px, -5px); }
+            80% { transform: translate(5px, 5px); }
+            100% { transform: translate(0); }
+        }
+
+        .shake {
+            animation: shake 0.8s;
         }
     </style>
 </head>
@@ -63,47 +86,114 @@
 <div class="container">
     <h1>Chloé, veux-tu être ma Valentine ? 💘</h1>
 
-    <button id="yesBtn">Oui 💖</button>
+    <div class="yes-wrapper">
+        <button id="yesBtn">Oui 💖</button>
+    </div>
+
     <button id="noBtn">Non 💔</button>
 
     <div id="message"></div>
     <div id="gif"></div>
 </div>
 
+<!-- Violon triste -->
+<audio id="sadViolin" loop>
+    <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_7c8a84c4d3.mp3" type="audio/mpeg">
+</audio>
+
 <script>
     const yesBtn = document.getElementById("yesBtn");
     const noBtn = document.getElementById("noBtn");
     const message = document.getElementById("message");
     const gif = document.getElementById("gif");
+    const violin = document.getElementById("sadViolin");
 
     let yesScale = 1;
     let noScale = 1;
+    let noClicks = 0;
+    let violinStarted = false;
+
+    const sadMessages = [
+        "Cela me fend mon petit cœur 💔",
+        "Chloé… vraiment ? Tu me brises l’âme 😢",
+        "Je ne m’en remettrai jamais… jamais 😭",
+        "Même les poètes pleurent en ce moment 🥀",
+        "Mon cœur vient officiellement de se désintégrer 🖤",
+        "Dis adieu à l’homme que j’étais ⚰️",
+        "Il pleut… mais seulement sur mon cœur 🌧️"
+    ];
+
+    // Position initiale du bouton NON
+    let noX = window.innerWidth / 2 + 100;
+    let noY = window.innerHeight / 2;
+
+    noBtn.style.left = noX + "px";
+    noBtn.style.top = noY + "px";
 
     // Bouton NON qui fuit la souris
-    noBtn.addEventListener("mouseenter", () => {
-        const x = Math.random() * (window.innerWidth - noBtn.offsetWidth);
-        const y = Math.random() * (window.innerHeight - noBtn.offsetHeight);
+    document.addEventListener("mousemove", (e) => {
+        if (noBtn.style.display === "none") return;
 
-        noBtn.style.left = x + "px";
-        noBtn.style.top = y + "px";
+        const mouseX = e.clientX;
+        const mouseY = e.clientY;
+
+        const rect = noBtn.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+
+        const dist = Math.hypot(mouseX - cx, mouseY - cy);
+        const fleeDistance = 130;
+
+        if (dist < fleeDistance) {
+            const angle = Math.atan2(cy - mouseY, cx - mouseX);
+
+            noX += Math.cos(angle) * 35;
+            noY += Math.sin(angle) * 35;
+
+            noX = Math.max(10, Math.min(window.innerWidth - rect.width - 10, noX));
+            noY = Math.max(10, Math.min(window.innerHeight - rect.height - 10, noY));
+
+            noBtn.style.left = noX + "px";
+            noBtn.style.top = noY + "px";
+        }
     });
 
+    // CLICK SUR NON
     noBtn.addEventListener("click", () => {
-        message.textContent = "Cela me fend mon petit cœur 💔";
-        gif.innerHTML = "";
 
-        yesScale += 0.2;
+        if (!violinStarted) {
+            violin.play();
+            violinStarted = true;
+        }
+
+        if (noClicks < sadMessages.length) {
+            message.textContent = sadMessages[noClicks];
+        }
+
+        noClicks++;
+
+        yesScale += 0.3;
+        yesScale = Math.min(yesScale, 2.5); // limite max
         noScale -= 0.15;
 
         yesBtn.style.transform = `scale(${yesScale})`;
 
-        if (noScale <= 0.3) {
+        // Tremblement au 6ème clic
+        if (noClicks === 6) {
+            document.body.classList.add("shake");
+            setTimeout(() => document.body.classList.remove("shake"), 800);
+        }
+
+        // Disparition EXACTEMENT au 7ème clic
+        if (noClicks === 7) {
             noBtn.style.display = "none";
+            message.textContent = "🫠 Acceptation inévitable…";
         } else {
             noBtn.style.transform = `scale(${noScale})`;
         }
     });
 
+    // CLICK SUR OUI
     yesBtn.addEventListener("click", () => {
         message.textContent = "Youpi ! Tu viens de faire un homme heureux ! 💕";
         gif.innerHTML = `
@@ -115,6 +205,7 @@
                 allowfullscreen>
             </iframe>
         `;
+        violin.pause();
         noBtn.style.display = "none";
         yesBtn.disabled = true;
     });
