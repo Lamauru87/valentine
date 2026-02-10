@@ -19,7 +19,6 @@
 
         .container {
             color: white;
-            position: relative;
         }
 
         h1 {
@@ -49,11 +48,15 @@
         }
 
         #noBtn {
-            background-color: #f44336;
-            color: white;
-            position: absolute;
-            transition: left 0.25s ease-out, top 0.25s ease-out, transform 0.2s ease;
-        }
+			background-color: #f44336;
+			color: white;
+			position: fixed; /* IMPORTANT */
+			left: 0;
+			top: 0;
+			transform: translate(0px, 0px);
+			transition: transform 0.25s ease-out;
+		}
+
 
         #message {
             margin-top: 25px;
@@ -125,38 +128,51 @@
 
     // Position initiale du bouton NON
     let noX = window.innerWidth / 2 + 100;
-    let noY = window.innerHeight / 2;
+let noY = window.innerHeight / 2;
 
-    noBtn.style.left = noX + "px";
-    noBtn.style.top = noY + "px";
+function updateNoPosition() {
+    noBtn.style.transform = `translate(${noX}px, ${noY}px) scale(${noScale})`;
+}
 
-    // Bouton NON qui fuit la souris
-    document.addEventListener("mousemove", (e) => {
-        if (noBtn.style.display === "none") return;
+updateNoPosition();
 
-        const mouseX = e.clientX;
-        const mouseY = e.clientY;
+document.addEventListener("mousemove", (e) => {
+    if (noBtn.style.display === "none") return;
 
-        const rect = noBtn.getBoundingClientRect();
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top + rect.height / 2;
+    const mouseX = e.clientX;
+    const mouseY = e.clientY;
 
-        const dist = Math.hypot(mouseX - cx, mouseY - cy);
-        const fleeDistance = 130;
+    const rect = noBtn.getBoundingClientRect();
+    const btnWidth = rect.width;
+    const btnHeight = rect.height;
 
-        if (dist < fleeDistance) {
-            const angle = Math.atan2(cy - mouseY, cx - mouseX);
+    const cx = rect.left + btnWidth / 2;
+    const cy = rect.top + btnHeight / 2;
 
-            noX += Math.cos(angle) * 35;
-            noY += Math.sin(angle) * 35;
+    const dist = Math.hypot(mouseX - cx, mouseY - cy);
+    const fleeDistance = 130;
 
-            noX = Math.max(10, Math.min(window.innerWidth - rect.width - 10, noX));
-            noY = Math.max(10, Math.min(window.innerHeight - rect.height - 10, noY));
+    if (dist < fleeDistance) {
+        const angle = Math.atan2(cy - mouseY, cx - mouseX);
 
-            noBtn.style.left = noX + "px";
-            noBtn.style.top = noY + "px";
-        }
-    });
+        noX += Math.cos(angle) * 40;
+        noY += Math.sin(angle) * 40;
+
+        // 🔒 Limites écran STRICTES
+        noX = Math.max(0, Math.min(window.innerWidth - btnWidth, noX));
+        noY = Math.max(0, Math.min(window.innerHeight - btnHeight, noY));
+
+        updateNoPosition();
+    }
+});
+
+window.addEventListener("resize", () => {
+    const rect = noBtn.getBoundingClientRect();
+    noX = Math.max(0, Math.min(window.innerWidth - rect.width, noX));
+    noY = Math.max(0, Math.min(window.innerHeight - rect.height, noY));
+    updateNoPosition();
+});
+
 
     // CLICK SUR NON
     noBtn.addEventListener("click", () => {
@@ -195,6 +211,7 @@
 
     // CLICK SUR OUI
     yesBtn.addEventListener("click", () => {
+        yesBtn.style.display = "none";
         message.textContent = "Youpi ! Tu viens de faire un homme heureux ! 💕";
         gif.innerHTML = `
             <iframe 
