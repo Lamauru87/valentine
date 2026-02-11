@@ -87,7 +87,7 @@
 <body>
 
 <div class="container">
-    <h1>Chloé, veux-tu être ma Valentine ? 💘</h1>
+    <h1 id="mainTitle">Chloé, veux-tu être ma Valentine ? 💘</h1>
 
     <div class="yes-wrapper">
         <button id="yesBtn">Oui 💖</button>
@@ -105,6 +105,7 @@
 </audio>
 
 <script>
+	const mainTitle = document.getElementById("mainTitle");
     const yesBtn = document.getElementById("yesBtn");
     const noBtn = document.getElementById("noBtn");
     const message = document.getElementById("message");
@@ -211,6 +212,7 @@ window.addEventListener("resize", () => {
 
     // CLICK SUR OUI
     yesBtn.addEventListener("click", () => {
+		mainTitle.style.display = "none";
         yesBtn.style.display = "none";
         message.textContent = "Youpi ! Tu viens de faire un homme heureux ! 💕";
         gif.innerHTML = `
@@ -230,4 +232,3 @@ window.addEventListener("resize", () => {
 
 </body>
 </html>
-
